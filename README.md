@@ -97,7 +97,7 @@ The **`/arduinov1/graphs`** folder contains scripts for generating graphs and vi
 ## Credits
 
 This project was made possible by various tutorials and libraries:
-- [How To Mechatronics](https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/).
+- [How To Mechatronics](https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/)
 - [Random Nerd Tutorials](https://randomnerdtutorials.com)
 - [MPU6050 Datasheet and Register Map](https://invensense.tdk.com)
 - [I2Cdevlib Library](https://github.com/jrowberg/i2cdevlib)

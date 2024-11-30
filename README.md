@@ -38,10 +38,10 @@ These documents will help you understand how the sensor works and how we can rea
 ## Testing and Calibration
 
 <!-- Adjust image size for responsiveness on mobile -->
-<img src="https://github.com/user-attachments/assets/2838bfc1-e629-464e-90b4-7cdf1d7d0729" alt="Calibration Test" style="max-width: 100%; height: auto;">
+<img src="https://github.com/user-attachments/assets/2838bfc1-e629-464e-90b4-7cdf1d7d0729" alt="Calibration Test" style="width: 200; height: 200;">
 
 <!-- Another image adjusted for mobile -->
-<img src="https://github.com/user-attachments/assets/1cd99d79-9332-45e3-92f2-be4b2e37490d" alt="Calibration Test 2" style="max-width: 100%; height: auto;">
+<img src="https://github.com/user-attachments/assets/1cd99d79-9332-45e3-92f2-be4b2e37490d" alt="Calibration Test 2" style="width: 200; height: 200;">
 
 1. **Testing MPU6050 Sensor**:
    - The file `/arduinov1/setup/calibration.ino` will help you test the MPU6050 sensor by measuring the accelerometer and gyroscope readings on the X, Y, and Z axes for 200 iterations. The code calculates the errors and logs them for calibration purposes.
@@ -79,7 +79,11 @@ The **`/arduinov1/graphs`** folder contains scripts for generating graphs and vi
 ### Attachments:
 - **[Video 2: Demonstration of the Sensor and Graph Visualization]**
 
+- ![ezgif-5-aabf8e1c7e](https://github.com/user-attachments/assets/39969ceb-20a7-488a-9fff-005624689087)
+
 ## How to Use
+
+
 
 1. **Set up the hardware** according to the connections provided above.
 2. **Upload the code** to the ESP32 board using the Arduino IDE.

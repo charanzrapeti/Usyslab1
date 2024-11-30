@@ -11,7 +11,8 @@ This project is designed to detect and visualize orientation and motion using va
 ## Connections
 
 <!-- Adjust image size for responsiveness on mobile -->
-<img src="https://github.com/user-attachments/assets/4784b4b9-4876-4094-b77c-50d3a98d4f0e" alt="Connection Image" style="max-width: 100%; height: auto;">
+<img src="https://github.com/user-attachments/assets/4784b4b9-4876-4094-b77c-50d3a98d4f0e" alt="Connection Image" width="300" 
+     height="350" >
 
 - For setting up the connections, I followed the tutorials from the following links:
   - [ESP32 + MPU6050 - Accelerometer and Gyroscope Setup](https://randomnerdtutorials.com/esp32-mpu-6050-accelerometer-gyroscope-arduino/)
@@ -38,10 +39,12 @@ These documents will help you understand how the sensor works and how we can rea
 ## Testing and Calibration
 
 <!-- Adjust image size for responsiveness on mobile -->
-<img src="https://github.com/user-attachments/assets/2838bfc1-e629-464e-90b4-7cdf1d7d0729" alt="Calibration Test" style="width: 200; height: 200;">
+<img src="https://github.com/user-attachments/assets/2838bfc1-e629-464e-90b4-7cdf1d7d0729" alt="Calibration Test" width="300" 
+     height="350">
 
 <!-- Another image adjusted for mobile -->
-<img src="https://github.com/user-attachments/assets/1cd99d79-9332-45e3-92f2-be4b2e37490d" alt="Calibration Test 2" style="width: 200; height: 200;">
+<img src="https://github.com/user-attachments/assets/1cd99d79-9332-45e3-92f2-be4b2e37490d" alt="Calibration Test 2" width="300" 
+     height="350">
 
 1. **Testing MPU6050 Sensor**:
    - The file `/arduinov1/setup/calibration.ino` will help you test the MPU6050 sensor by measuring the accelerometer and gyroscope readings on the X, Y, and Z axes for 200 iterations. The code calculates the errors and logs them for calibration purposes.

@@ -71,6 +71,9 @@ The relevant files for this setup can be found in the `/arduinov1` folder.
 
 ## Graphs and Visualization
 
+
+![ezgif-5-bb407f488b](https://github.com/user-attachments/assets/c692bd32-c2da-462e-bc3a-d9f8d3970084)
+
 The **`/arduinov1/graphs`** folder contains scripts for generating graphs and visualizing the sensor data. It models the board and simulates the sensor readings, providing real-time graphs that represent the motion and orientation data.
 
 ### Attachments:

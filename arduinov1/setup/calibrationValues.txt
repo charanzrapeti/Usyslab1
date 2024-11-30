@@ -1,0 +1,31 @@
+AccErrorX: 0.00
+AccErrorY: -0.00
+GyroErrorX: 501.07
+GyroErrorY: 2.43
+GyroErrorZ: 222.28
+Caliberation Completed
+Caliberation Starting .... 
+
+AccErrorX: 0.00
+AccErrorY: -0.00
+GyroErrorX: 354.65
+GyroErrorY: 2.78
+GyroErrorZ: 321.05
+Caliberation Completed
+Caliberation Starting .... 
+
+AccErrorX: 0.00
+AccErrorY: -0.00
+GyroErrorX: 398.33
+GyroErrorY: 61.37
+GyroErrorZ: 246.91
+Caliberation Completed
+Caliberation Starting .... 
+
+AccErrorX: 0.00
+AccErrorY: -0.00
+GyroErrorX: 500.55
+GyroErrorY: 2.36
+GyroErrorZ: 288.86
+
+// Approximated GyroErrorX, GyroErrorY, GyroErrorZ taken as : 500, 2, 250. 

@@ -1,18 +1,28 @@
 // The following code is copied from : 
 // https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/
 
-import processing.serial.*;
 
-Serial myPort;
-String data = "";
+import oscP5.*;
+import netP5.*;
+
+OscP5 oscP5;
+NetAddress myRemoteLocation;
+
 float roll, pitch, yaw;
+
+
+
+
 
 void setup() {
   size(2560, 1440, P3D);
-  
-  // Open the serial port on COM11 with baud rate 115200
-  myPort = new Serial(this, "COM11", 115200);
-  myPort.bufferUntil('\n'); // Wait until newline to read data
+
+  // Initialize OSC receiver on port 8000
+  oscP5 = new OscP5(this, 9999);
+
+  // For testing, set up a remote location (if needed)
+  myRemoteLocation = new NetAddress("127.0.0.1", 9999);
+ 
 }
 
 void displayCredits() {
@@ -50,26 +60,16 @@ void draw() {
  
 }
 
-void serialEvent(Serial myPort) {
-  // Read data until newline character
-  data = myPort.readStringUntil('\n');
+// Callback to handle incoming OSC messages
+void oscEvent(OscMessage theOscMessage) {
   
-  // Ensure data is not null
-  if (data != null) {
-    data = trim(data);  // Remove extra spaces and newlines
-
-    // Check if data starts with "ypr"
-    if (data.startsWith("ypr")) {
-      // Remove "ypr" and extract the roll, pitch, yaw values
-      data = data.substring(4);  // Remove "ypr\t"
-      String[] items = split(data, '\t');  // Split by tab character '\t'
-
-      if (items.length == 3) {
-        // Parse roll, pitch, and yaw as floats and assign them
-        yaw = float(items[0]);
-        pitch = float(items[1]);
-        roll = float(items[2]);
-      }
-    }
+  println("Received OSC message: " + theOscMessage);
+  if (theOscMessage.checkAddrPattern("/imu/ypr")) {
+    yaw = theOscMessage.get(0).floatValue();
+    pitch = theOscMessage.get(1).floatValue();
+    roll = theOscMessage.get(2).floatValue();
+    
+    // Print the extracted yaw, pitch, and roll values to the console
+    println("Yaw: " + yaw + ", Pitch: " + pitch + ", Roll: " + roll);
   }
 }

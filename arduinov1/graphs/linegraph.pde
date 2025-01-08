@@ -1,7 +1,9 @@
-import processing.serial.*;
+import oscP5.*;
+import netP5.*;
 
-Serial myPort;
-String data = "";
+OscP5 oscP5;
+NetAddress myRemoteLocation;
+
 float roll, pitch, yaw;
 int maxDataPoints = 500; // Max number of points to show on the graph (controlled by the width of the graph)
 float[] rollValues = new float[maxDataPoints];
@@ -12,9 +14,12 @@ int dataIndex = 0;
 void setup() {
   size(800, 600);  // Set the window size
   
-  // Open the serial port on COM11 with baud rate 115200
-  myPort = new Serial(this, "COM11", 115200);
-  myPort.bufferUntil('\n'); // Wait until newline to read data
+   // Initialize OSC receiver on port 8000
+  oscP5 = new OscP5(this, 9999);
+
+  // For testing, set up a remote location (if needed)
+  myRemoteLocation = new NetAddress("127.0.0.1", 9999);
+
   
   // Initialize the values
   for (int i = 0; i < maxDataPoints; i++) {
@@ -105,27 +110,16 @@ void drawLineGraph(float[] values, int startX, int startY, int graphWidth, int g
   }
 }
 
-void serialEvent(Serial myPort) {
-  // Read data until newline character
-  data = myPort.readStringUntil('\n');
+// Callback to handle incoming OSC messages
+void oscEvent(OscMessage theOscMessage) {
   
-  // Ensure data is not null
-  if (data != null) {
-    data = trim(data);  // Remove extra spaces and newlines
-
-    // Check if data starts with "ypr"
-    if (data.startsWith("ypr")) {
-      // Remove "ypr" and extract the roll, pitch, yaw values
-      data = data.substring(4);  // Remove "ypr\t"
-      String[] items = split(data, '\t');  // Split by tab character '\t'
-
-      if (items.length == 3) {
-        // Parse roll, pitch, and yaw as floats and assign them
-        yaw = float(items[0]);
-        pitch = float(items[1]);
-        roll = float(items[2]);
-        
-        // Store the new data values into the arrays
+  println("Received OSC message: " + theOscMessage);
+  if (theOscMessage.checkAddrPattern("/imu/ypr")) {
+    yaw = theOscMessage.get(0).floatValue();
+    pitch = theOscMessage.get(1).floatValue();
+    roll = theOscMessage.get(2).floatValue();
+    
+     // Store the new data values into the arrays
         rollValues[dataIndex] = roll;
         pitchValues[dataIndex] = pitch;
         yawValues[dataIndex] = yaw;
@@ -135,7 +129,8 @@ void serialEvent(Serial myPort) {
         if (dataIndex >= maxDataPoints) {
           dataIndex = 0;  // Start over when max data points are reached
         }
-      }
-    }
+    
+    // Print the extracted yaw, pitch, and roll values to the console
+    println("Yaw: " + yaw + ", Pitch: " + pitch + ", Roll: " + roll);
   }
 }

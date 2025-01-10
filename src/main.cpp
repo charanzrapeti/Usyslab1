@@ -28,6 +28,15 @@
     #include "Wire.h"
 #endif
 
+#include <SPI.h>
+#include <Adafruit_BMP280.h>
+
+// Define custom I2C pins for ESP32
+#define I2C_SDA 19
+#define I2C_SCL 23
+
+Adafruit_BMP280 bmp; // I2C
+
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
@@ -141,8 +150,11 @@ void dmpDataReady() {
 void mpu_setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-        Wire.begin();
+        // Initialize I2C with custom pins
+        Wire.begin(I2C_SDA, I2C_SCL);
         Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+
+
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
@@ -160,6 +172,31 @@ void mpu_setup() {
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
+
+    unsigned status;
+    status = bmp.begin(0x76); // 0x76 is the I2C address for BMP280; adjust if needed
+    if (!status) {
+        Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
+                        "try a different address!"));
+        Serial.print("SensorID was: 0x");
+        Serial.println(bmp.sensorID(), 16);
+        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+        Serial.print("        ID of 0x60 represents a BME 280.\n");
+        Serial.print("        ID of 0x61 represents a BME 680.\n");
+        while (1) delay(10);
+    }
+
+    /* Default settings from datasheet. */
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                    Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                    Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                    Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                    Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+
+
+
+
     mpu.initialize();
     pinMode(INTERRUPT_PIN, INPUT);
 
@@ -292,10 +329,28 @@ void mpu_loop() {
             Serial.print("\t");
             Serial.println(ypr[2] * 180/M_PI);
 
+            // bmp data 
+            // Read and truncate pressure to 3 decimal points
+            float pressure = bmp.readPressure();
+            pressure = ((int)(pressure * 1000)) / 1000.0; // Truncate to 3 decimal places
+            Serial.print(F("Pressure = "));
+            Serial.print(pressure); // Print pressure with 3 decimal places
+            Serial.println(" Pa");
+
+            // Read and truncate altitude to 3 decimal points
+            float altitude = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
+            altitude = ((int)(altitude * 1000)) / 1000.0; // Truncate to 3 decimal places
+            Serial.print(F("Approx altitude = "));
+            Serial.print(altitude); // Print altitude with 3 decimal places
+            Serial.println(" m");
+
+
             OSCMessage msg("/imu/ypr");
             msg.add((float)(ypr[0] * 180 / M_PI)); // Yaw
             msg.add((float)(ypr[1] * 180 / M_PI)); // Pitch
             msg.add((float)(ypr[2] * 180 / M_PI)); // Roll
+            msg.add((float)(pressure));
+            msg.add((float)(altitude));
 
             Udp.beginPacket(outIp, outPort);
             msg.send(Udp);

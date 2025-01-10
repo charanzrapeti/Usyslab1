@@ -4,133 +4,134 @@ import netP5.*;
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 
-float roll, pitch, yaw;
-int maxDataPoints = 500; // Max number of points to show on the graph (controlled by the width of the graph)
+float roll, pitch, yaw, pressure, altitude;
+int maxDataPoints = 500;
 float[] rollValues = new float[maxDataPoints];
 float[] pitchValues = new float[maxDataPoints];
 float[] yawValues = new float[maxDataPoints];
+float[] pressureValues = new float[maxDataPoints];
+float[] altitudeValues = new float[maxDataPoints];
 int dataIndex = 0;
 
 void setup() {
-  size(800, 600);  // Set the window size
-  
-   // Initialize OSC receiver on port 8000
+  size(1200, 900);
+
   oscP5 = new OscP5(this, 9999);
 
-  // For testing, set up a remote location (if needed)
-  myRemoteLocation = new NetAddress("127.0.0.1", 9999);
-
-  
-  // Initialize the values
   for (int i = 0; i < maxDataPoints; i++) {
     rollValues[i] = 0;
     pitchValues[i] = 0;
     yawValues[i] = 0;
+    pressureValues[i] = 0;
+    altitudeValues[i] = 0;
   }
-  
-  // Set smooth rendering
+
   smooth();
 }
 
 void draw() {
-  // Set background color for each frame
-  background(30, 30, 30); // Darker background for the window
-  
-  // Graph dimensions and positioning
-  int graphWidth = width - 40; // Graph will extend to the right edge, starting from 20px padding
-  int graphX = 20; // Set the graph's X starting position (20px padding from the left)
-  int graphY = height / 4; // Move the graph slightly higher by changing this value
-  int graphHeight = height / 2; // Graph will take up half the height of the window
-  
-  // Draw title and current values (text in top-right corner)
+  background(30, 30, 30);
+
+  int graphWidth = width - 40;
+  int graphHeight = height / 4;
+  int graphX = 20;
+  int rollPitchYawGraphY = 20;
+  int pressureGraphY = rollPitchYawGraphY + graphHeight + 40;
+  int altitudeGraphY = pressureGraphY + graphHeight + 40;
+
   drawTitle();
-  
-  // Draw the line graph for Roll, Pitch, and Yaw
-  drawGrid(graphX, graphY, graphWidth, graphHeight);
-  drawGraph(graphX, graphY, graphWidth, graphHeight);
+
+  drawGrid(graphX, rollPitchYawGraphY, graphWidth, graphHeight);
+  drawGraph(graphX, rollPitchYawGraphY, graphWidth, graphHeight, rollValues, pitchValues, yawValues, -100.0f, 100.0f);
+
+  drawGrid(graphX, pressureGraphY, graphWidth, graphHeight);
+  drawGraph(graphX, pressureGraphY, graphWidth, graphHeight, pressureValues, null, null, 97200.0f, 97300.0f);
+
+  drawGrid(graphX, altitudeGraphY, graphWidth, graphHeight);
+  drawGraph(graphX, altitudeGraphY, graphWidth, graphHeight, altitudeValues, null, null, 340.0f, 350.0f);
 }
 
 void drawTitle() {
-  // Title and current values display in the top-right corner
   textSize(20);
-  textAlign(RIGHT, TOP); // Align the text to the top-right corner
+  textAlign(RIGHT, TOP);
 
-  // Draw Roll in red, Pitch in green, and Yaw in blue
-  fill(255, 0, 0);  // Red for Roll
-  text("Roll: " + int(roll), width - 20, 20);
-  
-  fill(0, 255, 0);  // Green for Pitch
-  text("Pitch: " + int(pitch), width - 20, 45);
-  
-  fill(0, 0, 255);  // Blue for Yaw
-  text("Yaw: " + int(yaw), width - 20, 70);
+  fill(255, 0, 0);
+  text("Roll: " + int(roll), width - 20, height -20);
+
+  fill(0, 255, 0);
+  text("Pitch: " + int(pitch), width - 20, height - 45);
+
+  fill(0, 0, 255);
+  text("Yaw: " + int(yaw), width - 20, height - 70);
+
+  fill(255);
+  text("Pressure: " + nf(pressure, 1, 2), width - 20,height -  95);
+
+  fill(255, 255, 0);
+  text("Altitude: " + nf(altitude, 1, 2), width - 20, height - 120);
 }
 
 void drawGrid(int graphX, int graphY, int graphWidth, int graphHeight) {
-  // Draw grid lines to make the graph easier to read
-  
-  stroke(100); // Set grid line color to light gray
-  strokeWeight(1); // Thinner lines for the grid
-  
-  int gridSpacing = 20; // Space between grid lines
-  
-  // Draw vertical grid lines (only within the graph's width)
+  stroke(100);
+  strokeWeight(1);
+
+  int gridSpacing = 20;
+
   for (int i = 0; i <= graphWidth; i += gridSpacing) {
     line(graphX + i, graphY, graphX + i, graphY + graphHeight);
   }
-  
-  // Draw horizontal grid lines (only within the graph's height)
+
   for (int i = 0; i <= graphHeight; i += gridSpacing) {
     line(graphX, graphY + i, graphX + graphWidth, graphY + i);
   }
 }
 
-void drawGraph(int graphX, int graphY, int graphWidth, int graphHeight) {
-  // Set graph style
-  strokeWeight(3); // Make lines thicker for clarity
-  noFill();
-  
-  // Draw the roll, pitch, and yaw values as lines
-  stroke(255, 0, 0); // Red for Roll
-  drawLineGraph(rollValues, graphX, graphY, graphWidth, graphHeight);
+void drawGraph(int graphX, int graphY, int graphWidth, int graphHeight, float[] values1, float[] values2, float[] values3, float minValue, float maxValue) {
+  strokeWeight(2);
 
-  stroke(0, 255, 0); // Green for Pitch
-  drawLineGraph(pitchValues, graphX, graphY, graphWidth, graphHeight);
+  if (values1 != null) {
+    stroke(values2 == null && values3 == null ? 255 : 255, 0, 0); // Red or White
+    drawLineGraph(values1, graphX, graphY, graphWidth, graphHeight, minValue, maxValue);
+  }
 
-  stroke(0, 0, 255); // Blue for Yaw
-  drawLineGraph(yawValues, graphX, graphY, graphWidth, graphHeight);
-}
+  if (values2 != null) {
+    stroke(0, 255, 0); // Green
+    drawLineGraph(values2, graphX, graphY, graphWidth, graphHeight, minValue, maxValue);
+  }
 
-void drawLineGraph(float[] values, int startX, int startY, int graphWidth, int graphHeight) {
-  // Draw the line graph from the second data point (no need to draw from the first point)
-  for (int i = 1; i < maxDataPoints; i++) {
-    float prevY = startY + graphHeight - (values[i - 1] * graphHeight / 180);  // Mapping to graph height
-    float currY = startY + graphHeight - (values[i] * graphHeight / 180);      // Mapping to graph height
-    line(startX + i - 1, prevY, startX + i, currY);  // Draw the line between previous and current points
+  if (values3 != null) {
+    stroke(0, 0, 255); // Blue
+    drawLineGraph(values3, graphX, graphY, graphWidth, graphHeight, minValue, maxValue);
   }
 }
 
-// Callback to handle incoming OSC messages
+void drawLineGraph(float[] values, int startX, int startY, int graphWidth, int graphHeight, float minValue, float maxValue) {
+  for (int i = 1; i < maxDataPoints; i++) {
+    float prevY = startY + graphHeight - map(values[i - 1], minValue, maxValue, 0, graphHeight);
+    float currY = startY + graphHeight - map(values[i], minValue, maxValue, 0, graphHeight);
+    float x1 = startX + map(i - 1, 0, maxDataPoints, 0, graphWidth);
+    float x2 = startX + map(i, 0, maxDataPoints, 0, graphWidth);
+    line(x1, prevY, x2, currY);
+  }
+}
+
 void oscEvent(OscMessage theOscMessage) {
-  
-  println("Received OSC message: " + theOscMessage);
   if (theOscMessage.checkAddrPattern("/imu/ypr")) {
     yaw = theOscMessage.get(0).floatValue();
     pitch = theOscMessage.get(1).floatValue();
     roll = theOscMessage.get(2).floatValue();
-    
-     // Store the new data values into the arrays
-        rollValues[dataIndex] = roll;
-        pitchValues[dataIndex] = pitch;
-        yawValues[dataIndex] = yaw;
+    pressure = theOscMessage.get(3).floatValue();
+    altitude = theOscMessage.get(4).floatValue();
 
-        // Move to the next index, and reset if it exceeds maxDataPoints
-        dataIndex++;
-        if (dataIndex >= maxDataPoints) {
-          dataIndex = 0;  // Start over when max data points are reached
-        }
-    
-    // Print the extracted yaw, pitch, and roll values to the console
-    println("Yaw: " + yaw + ", Pitch: " + pitch + ", Roll: " + roll);
+    rollValues[dataIndex] = roll;
+    pitchValues[dataIndex] = pitch;
+    yawValues[dataIndex] = yaw;
+    pressureValues[dataIndex] = pressure;
+    altitudeValues[dataIndex] = altitude;
+
+    dataIndex++;
+    if (dataIndex >= maxDataPoints) {
+      dataIndex = 0;
+    }
   }
 }

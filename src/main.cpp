@@ -14,6 +14,8 @@
 #include <WiFiUdp.h>
 #include <OSCMessage.h>
 #include <WiFiManager.h> 
+#include <time.h>
+
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
@@ -44,66 +46,18 @@ Adafruit_BMP280 bmp; // I2C
 MPU6050 mpu;
 //MPU6050 mpu(0x69); // <-- use for AD0 high
 
-/* =========================================================================
-   NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
-   depends on the MPU-6050's INT pin being connected to the Arduino's
-   external interrupt #0 pin. On the Arduino Uno and Mega 2560, this is
-   digital I/O pin 2.
- * ========================================================================= */
-
-/* =========================================================================
-   NOTE: Arduino v1.0.1 with the Leonardo board generates a compile error
-   when using Serial.write(buf, len). The Teapot output uses this method.
-   The solution requires a modification to the Arduino USBAPI.h file, which
-   is fortunately simple, but annoying. This will be fixed in the next IDE
-   release. For more info, see these links:
-
-   http://arduino.cc/forum/index.php/topic,109987.0.html
-   http://code.google.com/p/arduino/issues/detail?id=958
- * ========================================================================= */
 
 
 
-// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
-// quaternion components in a [w, x, y, z] format (not best for parsing
-// on a remote host such as Processing or something though)
-//#define OUTPUT_READABLE_QUATERNION
-
-// uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
-// (in degrees) calculated from the quaternions coming from the FIFO.
-// Note that Euler angles suffer from gimbal lock (for more info, see
-// http://en.wikipedia.org/wiki/Gimbal_lock)
-//#define OUTPUT_READABLE_EULER
-
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
 #define OUTPUT_READABLE_YAWPITCHROLL
 
-// uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
-// components with gravity removed. This acceleration reference frame is
-// not compensated for orientation, so +X is always +X according to the
-// sensor, just without the effects of gravity. If you want acceleration
-// compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-//#define OUTPUT_READABLE_REALACCEL
-
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-//#define OUTPUT_READABLE_WORLDACCEL
-
-// uncomment "OUTPUT_TEAPOT" if you want output that matches the
-// format used for the InvenSense teapot demo
-//#define OUTPUT_TEAPOT
 
 
 
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
+int frameId = 0;
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -164,11 +118,6 @@ void mpu_setup() {
     // really up to you depending on your project)
     
 
-    // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3V or Arduino
-    // Pro Mini running at 3.3V, cannot handle this baud rate reliably due to
-    // the baud timing being too misaligned with processor ticks. You must use
-    // 38400 or slower in these cases, or use some kind of external separate
-    // crystal solution for the UART timer.
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
@@ -272,6 +221,14 @@ void setup(void) {
   Serial.print(F("WiFi connected! IP address: "));
   Serial.println(WiFi.localIP());
 
+  configTime(0, 0, "pool.ntp.org"); // Use NTP to fetch current time
+    Serial.println("Waiting for NTP time...");
+    while (!time(nullptr)) {
+        delay(1000);
+        Serial.print(".");
+    }
+    Serial.println("\nTime synchronized.");
+
   mpu_setup();
 
 
@@ -344,6 +301,17 @@ void mpu_loop() {
             Serial.print(altitude); // Print altitude with 3 decimal places
             Serial.println(" m");
 
+            // update the frameId 
+            frameId += 1;
+            Serial.println(" frame: ");
+            Serial.print(frameId);
+
+            // Fetch current time in hh:mm:ss format
+            time_t now = time(nullptr);
+            struct tm *timeInfo = localtime(&now);
+            char timeString[9];
+            strftime(timeString, sizeof(timeString), "%H:%M:%S", timeInfo);
+
 
             OSCMessage msg("/imu/ypr");
             msg.add((float)(ypr[0] * 180 / M_PI)); // Yaw
@@ -351,11 +319,16 @@ void mpu_loop() {
             msg.add((float)(ypr[2] * 180 / M_PI)); // Roll
             msg.add((float)(pressure));
             msg.add((float)(altitude));
+            msg.add((int)(frameId));
+            msg.add(timeString); // Add time as a string
 
             Udp.beginPacket(outIp, outPort);
             msg.send(Udp);
             Udp.endPacket();
             msg.empty();
+
+            Serial.print("Time: ");
+            Serial.println(timeString);
             Serial.println("UDP Packet sent");
         #endif
 

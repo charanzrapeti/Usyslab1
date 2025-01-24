@@ -1,4 +1,4 @@
-# Star vs Lift Detector
+# Stair vs Lift Detector
 
 This project is designed to detect and visualize orientation and motion using various sensors, including the **WESMOS LOLIN 32 LITE** board, **MPU6050 (Accelerometer/Gyroscope)**, and **BMP20 (Pressure Sensor)**. The project uses an ESP32 microcontroller and works with sensor data to calculate orientation (roll, pitch, and yaw) and other parameters to simulate lift and star orientations.
 
